@@ -14,8 +14,7 @@ resource "aws_subnet" "main" {
   for_each          = var.public_subnets
   cidr_block        = each.value["cidr_block"][0] + each.value["cidr_block"][1]
   availability_zone = each.value["availability_zone"][0]+each.value["availability_zone"][1]
-  tags = merge(
-    var.tags,
-    { Name = "${var.env}-${each.value["name"][0]+each.value["name"][1]}" }
-  )
+  tags = {
+    name = each.value["name"][0] + each.value["name"][1]
+  }
 }
