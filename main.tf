@@ -29,6 +29,23 @@ resource "aws_internet_gateway" "igw" {
     { Name = "${var.env}-igw" }
   )
 }
+#NatGW
+
+resource "aws_eip" "nat" {
+  for_each = var.public_subnets
+  vpc      = true
+}
+
+resource "aws_nat_gateway" "nat-gateways" {
+  for_each      = var.public_subnets
+  allocation_id = aws_eip.nat[each.value["name"]].id
+  subnet_id     = aws_subnet.public_subnets[each.value["name"]].id
+
+  tags = merge(
+    var.tags,
+    { Name = "${var.env}-${each.value["name"]}-natgw" }
+  )
+}
 
 ##public route-table
 resource "aws_route_table" "public_route_table" {
@@ -73,6 +90,10 @@ resource "aws_route_table" "private_route_table" {
   vpc_id = aws_vpc.main.id
 
   for_each = var.private_subnets
+#  route {
+#    cidr_block = "0.0.0.0/0"
+#    nat_gateway_id = aws_nat_gateway.nat-gateways[each.value["availability_zone"]].id
+#  }
   tags = merge(
     var.tags,
     { Name = "${var.env}-${each.value["name"]}" }
